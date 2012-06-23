@@ -7,6 +7,7 @@ define([
   , 'collections/trackers'
   , 'hbs!tmpls/map/index'
 ], function(_, Activity, Intent, Leaflet, Trackers) {
+    "use strict";
 
     var mapActivity = Activity.extend();
 
@@ -33,8 +34,6 @@ define([
             throw "Map already initialized!";
         }
 
-        
-
         var center = new Leaflet.LatLng(60.168564, 24.941111);
 
         var cloudmade = new L.TileLayer(
@@ -53,15 +52,12 @@ define([
         var map = this.map = new Leaflet.Map(
             this.sel('.map-container')[0],
             {
-                center: center
-              , zoom: 13
-              , layers: [
+              layers: [
                   cloudmade
                 , mm
               ]
             }
         );
-
         var layersControl = new L.Control.Layers({
             "CloudMade": cloudmade
           , "Maanmittauslaitos": mm
@@ -74,13 +70,19 @@ define([
         this.trackers.on('reset', function(e) {
             console.log('tracker updated');
             Intent.create('map:loadEvents').send();
+
+            me.timer = setInterval(function() {
+                Intent.create('map:loadEvents').send();
+            }, 5000);
+
         });
 
         var me = this;
-        this.map.on('load', function() {
+        this.map.on("load", function() {
             me.trackers.fetchWithSettings();
-            _.off(me.map, 'load');
         });
+
+        map.setView(center, 13);
 
         return true;
     };
@@ -98,33 +100,31 @@ define([
             tracker.get('events').on('reset', function(events) {
                 console.log('tracker::events', events);
 
-                if (tracker.marker === undefined) {
-                    events.each(function(ev) {
-                        var marker = new google.maps.Marker({
-                            position: new google.maps.LatLng(
-                                ev.get('location').latitude
-                              , ev.get('location').longitude
-                            )
-                          , map: me.map
+                var points = [];
+                events.each(function(ev) {
+                    var ll = new L.LatLng(
+                        ev.get('location').latitude
+                      , ev.get('location').longitude
+                    );
+                    points.push(ll);
 
-                        });
-                        me._markers.push(marker);
+                    tracker.lastPoint = ll;
+                });
 
-                        if (me._markers.length == 1) {
-                            var loc = marker.getPosition();
-                            console.log(loc);
-                            me.map.setCenter(loc);
-                        }
+                if (tracker.path === undefined) {
+                    tracker.path = new L.Polyline(points, {color: 'red'});
 
-                    });
-
-                    console.log(me);
+                    me.map.addLayer(tracker.path);
                 } else {
-                    // set marker
+                    tracker.path.setLatLngs(points);
                 }
             });
 
-            tracker.get('events').fetch();
+            tracker.get('events').fetch({
+                data: {
+                    maxResults: 10
+                }
+            });
         });
 
     };
