@@ -36,13 +36,13 @@ define([
 
         var center = new Leaflet.LatLng(60.168564, 24.941111);
 
-        var cloudmade = new L.TileLayer(
+        var cloudmade = new Leaflet.TileLayer(
             'http://{s}.tile.cloudmade.com/b1e35f2aca4f49899b04ab9e89ae3b18/997/256/{z}/{x}/{y}.png', {
                 attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
                 }
             );
 
-        var mm = new L.TileLayer(
+        var mm = new Leaflet.TileLayer(
             'http://tiles.kartat.kapsi.fi/peruskartta/{z}/{x}/{y}.jpg', {
                 attribution: 'Maanmittauslaitos'
               , maxZoom: 18
@@ -58,7 +58,7 @@ define([
               ]
             }
         );
-        var layersControl = new L.Control.Layers({
+        var layersControl = new Leaflet.Control.Layers({
             "CloudMade": cloudmade
           , "Maanmittauslaitos": mm
         });
@@ -71,9 +71,9 @@ define([
             console.log('tracker updated');
             Intent.create('map:loadEvents').send();
 
-            me.timer = setInterval(function() {
+            /*me.timer = setInterval(function() {
                 Intent.create('map:loadEvents').send();
-            }, 5000);
+            }, 5000);*/
 
         });
 
@@ -102,7 +102,7 @@ define([
 
                 var points = [];
                 events.each(function(ev) {
-                    var ll = new L.LatLng(
+                    var ll = new Leaflet.LatLng(
                         ev.get('location').latitude
                       , ev.get('location').longitude
                     );
@@ -112,7 +112,7 @@ define([
                 });
 
                 if (tracker.path === undefined) {
-                    tracker.path = new L.Polyline(points, {color: 'red'});
+                    tracker.path = new Leaflet.Polyline(points, {color: 'red'});
 
                     me.map.addLayer(tracker.path);
                 } else {

@@ -14,7 +14,7 @@ define([
 
             url += '/events';
             return url;
-      }
+        }
       , parse: function(response) {
             return response.events;
         }
